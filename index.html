@@ -193,7 +193,7 @@
         </form>
 
         <div class="card-footer">
-            <p>Made with <span>&hearts;</span> by Zaid</p>
+            <p>Made with ❤ by Zaid</p>
         </div>
     </main>
 
@@ -205,54 +205,101 @@
             
             // The SHA-256 hash of the password.
             const CORRECT_PASSWORD_HASH = 'a7c24c0bcfeeaa0ca9751a639c0606083df9faba7faa9ecfef9ba2342f4e5a0f';
-            
-            // The destination URL is encoded in Base64.
-            const ENCODED_URL = 'aHR0cHM6Ly93d3cuZ29vZ2xlLmNvbQ==';
+                        
+            // Encrypted data for URL using the password.
+            const SALT_B64 = 'ea49/UfperRKTPyJqgarMQ==';
+            const IV_B64 = 'gcGAnqGLrcFrajeo';
+            const CIPHERTEXT_B64 = 'sY+xy0FeIPJYcKvg32dmyPW4uByq+jEaHeLdc8ZDhoC3cbG2dvVqK7+Oqr6kJ/GGi38ihTP4kI09Qqv3498v4Xln0DUtCyryQySJVNGoyk9STcv0YMWjSLNk54nndhP5glDXpt9B0kL9wcXiu5w7gjqjYnD5wIU2Dg6LADuU5sSI9iYZX9QRiXG3+6egObcDp/AvaVyzgj+EYNxhG6fGh4ojlkjd4opJrIm96uB+CmtwOQ==';
+
 
             /**
-             * Hashes a string using the SHA-256 algorithm.
+             * Converts a Base64 string to an ArrayBuffer.
+             * @param {string} b64 - The Base64 string.
+             * @returns {ArrayBuffer}
+             */
+            function base64ToArrayBuffer(b64) {
+                const binary_string = window.atob(b64);
+                const len = binary_string.length;
+                const bytes = new Uint8Array(len);
+                for (let i = 0; i < len; i++) {
+                    bytes[i] = binary_string.charCodeAt(i);
+                }
+                return bytes.buffer;
+            }
+
+            /**
+             * Decrypts a ciphertext using a password with AES-GCM.
+             * @param {string} password - The password to derive the key from.
+             * @returns {Promise<string>} A promise that resolves to the decrypted URL.
+             */
+            async function decryptUrl(password) {
+                try {
+                    const salt = base64ToArrayBuffer(SALT_B64);
+                    const iv = base64ToArrayBuffer(IV_B64);
+                    const ciphertext = base64ToArrayBuffer(CIPHERTEXT_B64);
+
+                    // 1. Derive the key from the password and salt.
+                    const keyMaterial = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), { name: 'PBKDF2' }, false, ['deriveKey']);
+                    const key = await crypto.subtle.deriveKey(
+                        { name: 'PBKDF2', salt: salt, iterations: 100000, hash: 'SHA-256' },
+                        keyMaterial,
+                        { name: 'AES-GCM', length: 256 },
+                        true,
+                        ['decrypt']
+                    );
+                    
+                    // 2. Decrypt the ciphertext with the derived key.
+                    const decrypted = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: iv }, key, ciphertext);
+                    
+                    // 3. Decode the result back to a string.
+                    return new TextDecoder().decode(decrypted);
+                } catch (e) {
+                    console.error("Decryption failed:", e);
+                    // The password was wrong, so decryption failed.
+                    return null;
+                }
+            }
+            
+            /**
+             * Hashes a string using the SHA-256 algorithm for a quick password check.
              * @param {string} message - The string to hash.
              * @returns {Promise<string>} A promise that resolves to the hex-encoded hash.
              */
             async function sha256(message) {
-                // Encode the message as a UTF-8 byte array.
                 const msgBuffer = new TextEncoder().encode(message);
-                // Hash the message using the SubtleCrypto API.
                 const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-                // Convert the ArrayBuffer to a hexadecimal string.
                 const hashArray = Array.from(new Uint8Array(hashBuffer));
-                const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-                return hashHex;
+                return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
             }
 
-            // The event listener function is now async to await the hashing operation.
+            // The event listener function is now async to await hashing and decryption.
             passwordForm.addEventListener('submit', async (event) => {
                 event.preventDefault(); 
                 const enteredPassword = passwordInput.value;
                 
-                // Hash the user's input before comparing.
                 const enteredPasswordHash = await sha256(enteredPassword);
                 
-                // Reset states
                 formField.classList.remove('error', 'success');
                 formField.style.animation = '';
 
                 if (enteredPasswordHash === CORRECT_PASSWORD_HASH) {
-                    // SUCCESS: The hashes match.
-                    formField.classList.add('success');
+                    // Quick hash check passed. Now, attempt to decrypt the URL.
+                    const decryptedUrl = await decryptUrl(enteredPassword);
                     
-                    setTimeout(() => {
-                        // Decode the URL at runtime and then redirect.
-                        // The atob() function decodes a Base64-encoded string.
-                        // Use window.top.location.href to redirect the entire page, not just the iframe.
-                        window.top.location.href = atob(ENCODED_URL);
-                    }, 500);
-
+                    if (decryptedUrl) {
+                        // SUCCESS: Decryption worked.
+                        formField.classList.add('success');
+                        setTimeout(() => {
+                            window.top.location.href = decryptedUrl;
+                        }, 500);
+                    } else {
+                        // This case is unlikely if hash matches, but is a good fallback.
+                        formField.classList.add('error');
+                    }
                 } else {
                     // FAILURE: The hashes do not match.
                     formField.classList.add('error');
                     formField.style.animation = 'shake 0.4s';
-                    
                     passwordInput.value = '';
                     passwordInput.focus();
                 }
@@ -278,7 +325,5 @@
 
 </body>
 </html>
-
-
 
 
