@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Login</title>
+
+    <!-- Google Fonts: Roboto Flex & Material Symbols -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,400;8..144,500;8..144,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    
+    <style>
+        /* --- MATERIAL 3 VIBRANT & PROFESSIONAL THEME --- */
+        :root {
+            --m3-primary: #006A6A;
+            --m3-on-primary: #FFFFFF;
+            --m3-primary-container: #9CF2F1;
+            --m3-on-primary-container: #002020;
+            --m3-surface-container-highest: #DAE5E4;
+            --m3-surface-container-low: #F3FAFA;
+            --m3-surface: #FBFFFF;
+            --m3-on-surface: #191C1C;
+            --m3-on-surface-variant: #3F4948;
+            --m3-outline: #6F7979;
+            --m3-error: #BA1A1A;
+            --m3-success: #2E7D32; /* Added for success state */
+            --m3-font-family: 'Roboto Flex', sans-serif;
+            --m3-corner-radius-large: 16px;
+            --m3-corner-radius-full: 28px;
+            --m3-animation-easing: cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* --- BASE STYLES --- */
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            font-family: var(--m3-font-family);
+            background-color: var(--m3-surface);
+            color: var(--m3-on-surface);
+            background-image: radial-gradient(circle at 10% 10%, #E0F5F5, var(--m3-surface) 50%);
+        }
+
+        /* --- LAYOUT & CARD --- */
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 2rem 1rem;
+        }
+
+        .content-card {
+            background-color: var(--m3-surface-container-low);
+            padding: 2rem 1.5rem;
+            border-radius: var(--m3-corner-radius-large);
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 10px 30px -15px rgba(0, 50, 50, 0.2);
+            border: 1px solid var(--m3-surface-container-highest);
+            animation: slideUp 0.6s var(--m3-animation-easing) forwards;
+            transform: translateY(20px);
+            opacity: 0;
+        }
+        
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Animation for incorrect password */
+        .shake {
+            animation: shake 0.5s var(--m3-animation-easing);
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        /* Animation for correct password */
+        .success {
+            animation: success-pulse 0.6s var(--m3-animation-easing);
+        }
+
+        @keyframes success-pulse {
+            0% { box-shadow: 0 0 0 0 var(--m3-primary-container); }
+            70% { box-shadow: 0 0 0 15px rgba(156, 242, 241, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(156, 242, 241, 0); }
+        }
+
+        @media (min-width: 600px) {
+            .content-card { padding: 2.5rem 2rem; }
+        }
+
+        /* --- TYPOGRAPHY & HEADER --- */
+        .header {
+            text-align: center;
+            padding-bottom: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .header .material-symbols-outlined {
+            font-size: 48px;
+            color: var(--m3-primary);
+            /* Interactive Header: Add transition for scaling */
+            transition: transform 0.3s var(--m3-animation-easing);
+        }
+
+        /* Interactive Header: Scaled state */
+        .header .material-symbols-outlined.focused {
+            transform: scale(1.1);
+        }
+
+        .m3-headline-medium {
+            font-size: 28px;
+            font-weight: 500;
+            line-height: 36px;
+            margin: 0.5rem 0 0.25rem 0;
+            color: var(--m3-on-surface);
+        }
+
+        .m3-body-large {
+            font-size: 16px;
+            line-height: 24px;
+            margin: 0;
+            color: var(--m3-on-surface-variant);
+        }
+
+        /* --- FORM & INPUT --- */
+        .password-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        #password-input {
+            flex-grow: 1;
+            border: 1px solid var(--m3-outline);
+            background-color: var(--m3-surface-container-highest);
+            border-radius: var(--m3-corner-radius-full);
+            padding: 0.75rem 4rem 0.75rem 1.25rem; /* Make space for buttons */
+            font-size: 16px;
+            font-family: inherit;
+            color: var(--m3-on-surface);
+            outline: none;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        #password-input::placeholder {
+            color: var(--m3-on-surface-variant);
+        }
+
+        #password-input:focus {
+            border-color: var(--m3-primary);
+            box-shadow: 0 0 0 2px var(--m3-primary-container);
+        }
+        
+        #password-input.input-error {
+            border-color: var(--m3-error);
+            box-shadow: 0 0 0 2px rgba(186, 26, 26, 0.2);
+        }
+
+        .input-actions {
+            position: absolute;
+            right: 6px;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        
+        .icon-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: none;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            color: var(--m3-on-surface-variant);
+            /* Tactile Button: Add transition for hover effect */
+            transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        /* Tactile Button: Add hover effect */
+        .icon-btn:hover {
+            background-color: var(--m3-surface-container-highest);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Animated Icon: Add transition to the icon itself */
+        #toggle-visibility-btn .material-symbols-outlined {
+            transition: transform 0.3s var(--m3-animation-easing);
+        }
+        
+        /* Animated Icon: Rotated state */
+        #toggle-visibility-btn .material-symbols-outlined.toggled {
+            transform: rotate(180deg);
+        }
+
+        #submit-btn {
+            background-color: var(--m3-primary);
+            color: var(--m3-on-primary);
+            position: relative; /* Needed for positioning icons */
+            overflow: hidden; /* Hide icons when they move out */
+        }
+
+        #submit-btn:hover {
+             background-color: #005656; /* Darker shade of primary */
+             color: var(--m3-on-primary);
+        }
+
+        .submit-arrow, .spinner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        
+        .spinner {
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(0.5);
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: var(--m3-on-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        #submit-btn.loading .submit-arrow {
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(0.5);
+        }
+
+        #submit-btn.loading .spinner {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+        
+        @keyframes spin {
+            to { transform: translate(-50%,-50%) rotate(360deg); }
+        }
+
+        /* --- MESSAGE AREA --- */
+        #message-area {
+            text-align: center;
+            margin-top: 1rem;
+            min-height: 24px;
+            font-size: 14px;
+            transition: color 0.3s ease;
+        }
+        .message-error { color: var(--m3-error); }
+        .message-success { color: var(--m3-success); }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+    <main class="container">
+        <div class="content-card" id="login-card">
+            <div class="header">
+                <span class="material-symbols-outlined" id="header-lock-icon">lock</span>
+                <h1 class="m3-headline-medium">Enter Password</h1>
+                <p class="m3-body-large">This page is secure.</p>
+            </div>
+            
+            <form id="login-form">
+                <div class="password-wrapper">
+                    <input type="password" id="password-input" placeholder="Your password" autocomplete="current-password">
+                    <div class="input-actions">
+                         <button type="button" class="icon-btn" id="toggle-visibility-btn" aria-label="Toggle password visibility">
+                            <span class="material-symbols-outlined">visibility</span>
+                        </button>
+                        <button type="submit" class="icon-btn" id="submit-btn" aria-label="Unlock">
+                           <span class="material-symbols-outlined submit-arrow">arrow_forward</span>
+                           <div class="spinner"></div>
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            <div id="message-area"></div>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const loginForm = document.getElementById('login-form');
+            const passwordInput = document.getElementById('password-input');
+            const toggleBtn = document.getElementById('toggle-visibility-btn');
+            const submitBtn = document.getElementById('submit-btn');
+            const messageArea = document.getElementById('message-area');
+            const loginCard = document.getElementById('login-card');
+            const headerLockIcon = document.getElementById('header-lock-icon');
+
+            // Securely store the hashed password. This is the SHA-256 hash for "pass123".
+            const correctPasswordHash = "3d295c276595a70321c1794711956a6560abfe21a2c1407f311c623e1071a629";
+            
+            // Base64 encoded URL for "https://www.google.com"
+            const redirectUrl = atob("aHR0cHM6Ly93d3cuZ29vZ2xlLmNvbQ==");
+
+            // Function to hash a string using SHA-256
+            async function hashString(str) {
+                const encoder = new TextEncoder();
+                const data = encoder.encode(str);
+                const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            }
+            
+            // Toggle password visibility
+            toggleBtn.addEventListener('click', () => {
+                const icon = toggleBtn.querySelector('.material-symbols-outlined');
+                icon.classList.toggle('toggled'); // Animate icon
+                if (passwordInput.type === 'password') {
+                    passwordInput.type = 'text';
+                    icon.textContent = 'visibility_off';
+                } else {
+                    passwordInput.type = 'password';
+                    icon.textContent = 'visibility';
+                }
+            });
+
+            // Interactive Header: Add focus/blur listeners
+            passwordInput.addEventListener('focus', () => {
+                headerLockIcon.classList.add('focused');
+            });
+            passwordInput.addEventListener('blur', () => {
+                headerLockIcon.classList.remove('focused');
+            });
+
+            // Handle form submission
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await validatePassword();
+            });
+
+            // When user starts typing, remove error state
+            passwordInput.addEventListener('input', () => {
+                passwordInput.classList.remove('input-error');
+                messageArea.textContent = '';
+                messageArea.className = '';
+            });
+
+            async function validatePassword() {
+                submitBtn.classList.add('loading');
+                submitBtn.disabled = true;
+                passwordInput.disabled = true;
+
+                const enteredPassword = passwordInput.value;
+                const enteredPasswordHash = await hashString(enteredPassword);
+
+                // Simulate network delay
+                setTimeout(() => {
+                    loginCard.classList.remove('shake', 'success'); // reset animations
+
+                    if (enteredPasswordHash === correctPasswordHash) {
+                        // Correct password
+                        messageArea.textContent = 'Success! Redirecting...';
+                        messageArea.className = 'message-success';
+                        loginCard.classList.add('success');
+                        
+                        setTimeout(() => {
+                           window.location.href = redirectUrl;
+                        }, 1000); // Wait for animation and message visibility
+
+                    } else {
+                        // Incorrect password
+                        messageArea.textContent = 'Incorrect password. Please try again.';
+                        messageArea.className = 'message-error';
+                        loginCard.classList.add('shake');
+                        passwordInput.classList.add('input-error'); // Add error class to input
+
+                        submitBtn.classList.remove('loading');
+                        submitBtn.disabled = false;
+                        passwordInput.disabled = false;
+                        passwordInput.focus();
+                        passwordInput.select();
+                    }
+                }, 1000);
+            }
+        });
+    </script>
+</body>
+</html>
+
