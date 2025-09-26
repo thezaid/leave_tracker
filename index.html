@@ -193,7 +193,7 @@
         </form>
 
         <div class="card-footer">
-            <p>Made with ❤ by Zaid</p>
+            <p>Made with <span>&hearts;</span> by Zaid</p>
         </div>
     </main>
 
@@ -244,7 +244,8 @@
                     setTimeout(() => {
                         // Decode the URL at runtime and then redirect.
                         // The atob() function decodes a Base64-encoded string.
-                        window.location.href = atob(ENCODED_URL);
+                        // Use window.top.location.href to redirect the entire page, not just the iframe.
+                        window.top.location.href = atob(ENCODED_URL);
                     }, 500);
 
                 } else {
@@ -277,6 +278,7 @@
 
 </body>
 </html>
+
 
 
 
